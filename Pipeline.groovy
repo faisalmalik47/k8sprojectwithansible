@@ -5,7 +5,7 @@ node {
     stage("Pushing the Dockerfile to the ansible server"){
         sshagent(credentials : ['Ansible']) {
             sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.11'
-            sh 'scp /var/lib/jenkins/workspace/kubernetes-demo/* ubuntu@10.0.0.11:/home/ubuntu'
+            sh 'scp /var/lib/jenkins/workspace/kubernetes-demo/* ubuntu@10.0.0.11:/home/ubuntu/'
     }
     }
     stage("Docker Image Building") {
@@ -27,8 +27,21 @@ node {
                 sh "ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.11 docker login -u philic -p ${docker_pass}"
                 sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.11 docker image push philic/$JOB_NAME:v1.$BUILD_ID'
                 sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.11 docker image push philic/$JOB_NAME:latest'
+                sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.11 docker image rm philic/$JOB_NAME:v1.$BUILD_ID philic/$JOB_NAME:latest $JOB_NAME:v1.$BUILD_ID'
             }
         }
+    }
+    stage("Copying code from Ansible to k8s-server"){
+        sshagent(credentials : ['k8s-key']) {
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.14'
+            sh 'scp /var/lib/jenkins/workspace/kubernetes-demo/* ubuntu@10.0.0.14:/home/ubuntu'
+    }
+    }
+    stage("Deployment using ansible"){
+        sshagent(credentials : ['Ansible']) {
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.11 cd /home/ubuntu'
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@10.0.0.11 ansible-playbook ansible.yml'
+    }
     }
 
 }
