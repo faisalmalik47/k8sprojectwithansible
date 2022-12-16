@@ -1,15 +1,15 @@
 - hosts: all
   become: true
   tasks: 
+     - name: Stopping minikube
+       command: minikube stop
+     - name: Starting minikube
+       command: minikube start
      - name: delete old deployment
        command: kubectl delete -f /home/ubuntu/Deployment.yml
-       ignore_errors: true
      - name: delete old service
        command: kubectl delete -f /home/ubuntu/Service.yml
-       ignore_errors: true
      - name: create new deployment
        command: kubectl apply -f /home/ubuntu/Deployment.yml
-       ignore_errors: true
      - name: create new service
        command: kubectl apply -f /home/ubuntu/Service.yml
-       ignore_errors: true
